@@ -4,7 +4,7 @@ Dell Precision M2800 | i7-4810MQ | 15.6GB RAM | 256GB SSD
 
 ## Structure
 
-```
+```sh
 /etc/nixos/
 ├── flake.nix
 ├── hosts/
