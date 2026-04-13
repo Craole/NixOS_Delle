@@ -1,6 +1,12 @@
-{ pkgs, ... }:
-
 {
+  config,
+  lib,
+  pkgs,
+  dom,
+  ...
+}: let
+  cfg = config.${dom};
+in {
   # ── NetworkManager ──────────────────────────────────────────────────────────
 
   networking = {
@@ -9,8 +15,8 @@
     # Firewall — allow SSH and Tailscale; lock everything else
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 22 ];
-      trustedInterfaces = [ "tailscale0" ];
+      allowedTCPPorts = [22];
+      trustedInterfaces = ["tailscale0"];
       # Starlink Mini comes in as a regular ethernet/wifi interface
       # No special config needed — NM handles it
     };
@@ -20,7 +26,7 @@
   # Run `sudo tailscale up` post-install to authenticate
   # With two ISPs you can use exit nodes to route through either
 
-  services.tailscale = {
+  services.tailscale = lib.mkIf cfg.services.tailscale {
     enable = true;
     useRoutingFeatures = "both"; # allows using Delle as exit node if needed
     openFirewall = true;
@@ -37,7 +43,7 @@
   # ── Packages ─────────────────────────────────────────────────────────────────
 
   environment.systemPackages = with pkgs; [
-    networkmanagerapplet  # nm-applet for tray
+    networkmanagerapplet # nm-applet for tray
     dig
     nmap
     traceroute

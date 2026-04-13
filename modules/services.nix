@@ -1,31 +1,43 @@
-{ pkgs, ... }:
-
 {
+  config,
+  lib,
+  pkgs,
+  dom,
+  ...
+}: let
+  inherit (lib.lists) optionals;
+  inherit (lib.modules) mkIf;
+
+  cfg = config.${dom};
+in {
+  nixpkgs.config.permittedInsecurePackages =
+    optionals cfg.services.openclaw ["openclaw-2026.4.2"];
+
   # ── SSH ─────────────────────────────────────────────────────────────────────
 
   services.openssh = {
     enable = true;
     openFirewall = true;
     settings = {
-      PasswordAuthentication = false;  # keys only
-      PermitRootLogin        = "no";
-      X11Forwarding          = false;
+      PasswordAuthentication = false; # keys only
+      PermitRootLogin = "no";
+      X11Forwarding = false;
     };
   };
 
   # ── Docker ──────────────────────────────────────────────────────────────────
 
-  virtualisation.docker = {
-    enable           = true;
-    enableOnBoot     = true;
+  virtualisation.docker = mkIf cfg.containers.enable {
+    enable = true;
+    enableOnBoot = true;
     autoPrune.enable = true;
   };
 
   # ── Podman ──────────────────────────────────────────────────────────────────
 
-  virtualisation.podman = {
-    enable            = true;
-    dockerCompat      = false; # Docker is already installed
+  virtualisation.podman = mkIf cfg.containers.enable {
+    enable = true;
+    dockerCompat = false; # Docker is already installed
     defaultNetwork.settings.dns_enabled = true;
   };
 
@@ -34,9 +46,9 @@
   # Run `openclaw onboard` as craole after first login to configure
   # Channels (Telegram, Discord, etc.) and API keys set up via onboard wizard
 
-  services.openclaw = {
-    enable  = true;
-    domain  = "delle.local";
+  services.openclaw = mkIf cfg.services.openclaw {
+    enable = true;
+    domain = "${cfg.hostName}.local";
     # Secrets managed via environment file — create after install:
     # /etc/openclaw/secrets (mode 600, owned by openclaw service user)
     # Contents:
@@ -46,9 +58,9 @@
 
   # ── Packages ─────────────────────────────────────────────────────────────────
 
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = optionals cfg.containers.enable (with pkgs; [
     docker-compose
     podman-compose
-    lazydocker   # TUI for docker management
-  ];
+    lazydocker # TUI for docker management
+  ]);
 }

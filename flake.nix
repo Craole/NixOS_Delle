@@ -2,44 +2,61 @@
   description = "Delle — NixOS configuration for Dell Precision M2800";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    home-manager = {
+    NixPackages.url = "github:NixOS/nixpkgs/nixos-unstable";
+    HomeManager = {
       url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "NixPackages";
     };
-
-    disko = {
+    Disko = {
       url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "NixPackages";
     };
-
-    openclaw-nix = {
+    OpenClaw = {
       url = "github:Scout-DJ/openclaw-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "NixPackages";
+    };
+    AI = {
+      url = "github:numtide/llm-agents.nix";
+      inputs.nixpkgs.follows = "NixPackages";
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, disko, openclaw-nix, ... }@inputs: {
-    nixosConfigurations.delle = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = { inherit inputs; };
-      modules = [
-        disko.nixosModules.disko
-        openclaw-nix.nixosModules.default
-        home-manager.nixosModules.home-manager
-
-        ./hosts/delle/default.nix
-
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = { inherit inputs; };
-            users.craole = import ./home/craole.nix;
-          };
-        }
-      ];
+  outputs = inputs @ {
+    self,
+    NixPackages,
+    HomeManager,
+    Disko,
+    OpenClaw,
+    ...
+  }: let
+    lib = NixPackages.lib;
+    mkHost = {
+      name,
+      system ? "x86_64-linux",
+      extraModules ? [],
+    }:
+      lib.nixosSystem {
+        inherit system;
+        specialArgs = {
+          inherit inputs name;
+          dom = "_";
+        };
+        modules =
+          [
+            Disko.nixosModules.disko
+            OpenClaw.nixosModules.default
+            HomeManager.nixosModules.home-manager
+            ./modules
+            ./users
+            ./hosts/${name}
+          ]
+          ++ extraModules;
+      };
+  in {
+    nixosConfigurations = {
+      delle = mkHost {name = "delle";};
     };
+
+    formatter.x86_64-linux = NixPackages.legacyPackages.x86_64-linux.alejandra;
   };
 }

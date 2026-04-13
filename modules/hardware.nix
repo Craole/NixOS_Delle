@@ -7,8 +7,7 @@
     enable = true;
     extraPackages = with pkgs; [
       intel-media-driver   # VAAPI for Haswell+
-      vaapiVdpau
-      libvdpau-via-va
+      libva-vdpau-driver
     ];
   };
 
@@ -24,7 +23,7 @@
   };
 
   # Disable PulseAudio (replaced by PipeWire)
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
 
   # ── Bluetooth ───────────────────────────────────────────────────────────────

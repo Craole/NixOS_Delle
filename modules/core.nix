@@ -1,13 +1,19 @@
-{ pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  dom,
+  ...
+}: let
+  cfg = config.${dom};
+in {
   # ── Nix / Flakes ────────────────────────────────────────────────────────────
 
   nix = {
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = ["nix-command" "flakes"];
       auto-optimise-store = true;
-      trusted-users = [ "root" "craole" ];
+      trusted-users = ["root" "craole"];
 
       # Binary caches
       substituters = [
@@ -29,6 +35,9 @@
   };
 
   nixpkgs.config.allowUnfree = true;
+  networking.hostName = cfg.hostName;
+  system.stateVersion = cfg.stateVersion;
+  nixpkgs.hostPlatform = lib.mkDefault cfg.system;
 
   # ── Locale & Time ───────────────────────────────────────────────────────────
 
@@ -37,20 +46,20 @@
   i18n = {
     defaultLocale = "en_US.UTF-8";
     extraLocaleSettings = {
-      LC_ADDRESS        = "en_US.UTF-8";
+      LC_ADDRESS = "en_US.UTF-8";
       LC_IDENTIFICATION = "en_US.UTF-8";
-      LC_MEASUREMENT    = "en_US.UTF-8";
-      LC_MONETARY       = "en_US.UTF-8";
-      LC_NAME           = "en_US.UTF-8";
-      LC_NUMERIC        = "en_US.UTF-8";
-      LC_PAPER          = "en_US.UTF-8";
-      LC_TELEPHONE      = "en_US.UTF-8";
-      LC_TIME           = "en_US.UTF-8";
+      LC_MEASUREMENT = "en_US.UTF-8";
+      LC_MONETARY = "en_US.UTF-8";
+      LC_NAME = "en_US.UTF-8";
+      LC_NUMERIC = "en_US.UTF-8";
+      LC_PAPER = "en_US.UTF-8";
+      LC_TELEPHONE = "en_US.UTF-8";
+      LC_TIME = "en_US.UTF-8";
     };
   };
 
   console = {
-    font   = "Lat2-Terminus16";
+    font = "Lat2-Terminus16";
     keyMap = "us";
   };
 
@@ -68,10 +77,10 @@
       noto-fonts-emoji
     ];
     fontconfig.defaultFonts = {
-      monospace  = [ "JetBrainsMono Nerd Font" ];
-      sansSerif  = [ "Inter" ];
-      serif      = [ "IBM Plex Serif" ];
-      emoji      = [ "Noto Color Emoji" ];
+      monospace = ["JetBrainsMono Nerd Font"];
+      sansSerif = ["Inter"];
+      serif = ["IBM Plex Serif"];
+      emoji = ["Noto Color Emoji"];
     };
   };
 
